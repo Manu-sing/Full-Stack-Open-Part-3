@@ -1,3 +1,4 @@
+
 require('dotenv').config()
 const express = require('express')
 const morgan = require("morgan")
@@ -44,12 +45,14 @@ app.use(cors())
 
 
 app.get('/info', (request, response) => {
-    const len = persons.length
     const date = new Date()
-    response.send(`
-    <p>Phonebook has info for ${len} people</p>
-    <p>${date}</p>
-    `)
+    Person.find({}).then(persons => {
+        response.send(`
+        <p>Phonebook has info for ${persons.length} people</p>
+        <p>${date}</p>
+        `)
+        console.log(persons)
+      })
   })
   
 
@@ -74,13 +77,14 @@ app.get('/api/persons/:id', (request, response, next) => {
   })
 
 
-  app.delete('/api/persons/:id', (request, response, next) => {
+app.delete('/api/persons/:id', (request, response, next) => {
     Person.findByIdAndRemove(request.params.id)
       .then(result => {
         response.status(204).end()
       })
       .catch(error => next(error))
   })
+
 
   
 app.post('/api/persons', (request, response) => {
@@ -108,6 +112,23 @@ app.post('/api/persons', (request, response) => {
         response.json(savedPerson)
       })
   })
+
+  app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+  
+    const person = {
+      name: body.name,
+      number: body.number,
+    }
+  
+    Person.findByIdAndUpdate(request.params.id, person, { new: body.number })
+      .then(updatedPerson => {
+        response.json(updatedPerson)
+      })
+      .catch(error => next(error))
+  })
+
+  
 
   const errorHandler = (error, request, response, next) => {
     console.error(error.message)
